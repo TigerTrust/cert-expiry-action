@@ -1,0 +1,35 @@
+# Build artefacts
+/bin/
+/dist/
+*.exe
+*.test
+*.out
+*.prof
+coverage.out
+coverage.html
+
+# Go workspace / tooling
+/vendor/
+go.work
+go.work.sum
+
+# Editor & OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Local env / secrets — TIGERTRUST_WEBHOOK_TOKEN MUST NOT be committed
+.env
+.env.*
+!.env.example
+
+# Local overrides of the sample hosts file
+hosts.local.txt
+hosts.*.local.txt
+
+# Generated output
+summary.md
+results.json

@@ -1,0 +1,64 @@
+name: Cert expiry check
+description: Fail CI when any TLS certificate is close to expiry.
+author: TigerTrust
+
+branding:
+  icon: shield
+  color: orange
+
+inputs:
+  hosts:
+    description: Hosts to check (multiline or comma-separated; "host" or "host:port").
+    required: true
+  warn_days:
+    description: Warn when a cert expires within N days.
+    required: false
+    default: '30'
+  fail_days:
+    description: Fail (exit 1) when a cert expires within N days.
+    required: false
+    default: '14'
+  timeout:
+    description: Per-host TLS dial timeout (Go duration, e.g. 10s).
+    required: false
+    default: '10s'
+  allow_errors:
+    description: Treat dial errors as non-fatal.
+    required: false
+    default: 'false'
+  webhook_url:
+    description: Generic webhook URL — receives a JSON summary on warn/fail.
+    required: false
+    default: ''
+  tigertrust_webhook:
+    description: TigerTrust webhook URL. The token in env TIGERTRUST_WEBHOOK_TOKEN is sent as Bearer.
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.22'
+
+    - name: Install cert-expiry
+      shell: bash
+      run: |
+        ref="${{ github.action_ref }}"
+        if [ -z "$ref" ]; then ref="main"; fi
+        go install "github.com/tigertrust/cert-expiry-action/cmd/cert-expiry@${ref}"
+
+    - name: Run cert-expiry
+      shell: bash
+      run: |
+        args=(--hosts "${{ inputs.hosts }}"
+              --warn-days "${{ inputs.warn_days }}"
+              --fail-days "${{ inputs.fail_days }}"
+              --timeout "${{ inputs.timeout }}"
+              --markdown)
+        if [ "${{ inputs.allow_errors }}" = "true" ]; then args+=(--allow-errors); fi
+        if [ -n "${{ inputs.webhook_url }}" ]; then args+=(--webhook-url "${{ inputs.webhook_url }}"); fi
+        if [ -n "${{ inputs.tigertrust_webhook }}" ]; then args+=(--tigertrust-webhook "${{ inputs.tigertrust_webhook }}"); fi
+        "$(go env GOPATH)/bin/cert-expiry" "${args[@]}"

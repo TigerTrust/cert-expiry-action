@@ -1,0 +1,4 @@
+# One host per line. Blank lines and `#` comments ignored.
+# Default port is 443; override with "host:port".
+example.com
+www.example.com:443
